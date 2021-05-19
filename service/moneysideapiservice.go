@@ -110,7 +110,7 @@ func SendTransactionStatusUpdateEmail(transactionResponse TransactionResponse) {
 	content := "Status for transaction id:" + IntToString(transactionResponse.Id) +
 		" is updated to " + transactionResponse.StatusMessage + ".\n transaction detail: " +
 		FloatToString(transactionResponse.Destination.Amount) + transactionResponse.Destination.Currency +
-		" Creation data: " + transactionResponse.CreationDate + ".\n"
+		". Creation date: " + transactionResponse.CreationDate + ".\n"
 	switch transactionResponse.Status {
 	case STATUS_COMPLETED:
 		content += "\ntransaction is successful."

@@ -3,13 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 )
-
-const CREDIT_PARTY_MSISDN_100 string = "263775892100"
-const CREDIT_PARTY_MSISDN_117 string = "263775892117"
-const CREDIT_PARTY_MSISDN_104 string = "263775892104"
-const CREDIT_PARTY_MSISDN_111 string = "263775892111"
 
 const STATUS_COMPLETED string = "70000"
 const STATUS_DECLINED_PAYER_CURRENTLY_UNAVAILABLE string = "90400"
@@ -55,8 +49,7 @@ func GetPayerLimitation(payerId string) C2c {
 	return payer.TransactionType.C2c
 }
 
-func createQuotation() QuotationResponse {
-	quotationRequest := GetQuotationRequestBody()
+func createQuotation(quotationRequest []byte) QuotationResponse {
 	var quotationResponseByte = HttpPost("https://api-mt.pre.thunes.com/v2/money-transfer/quotations",
 		quotationRequest, GetApiKey(), GetApiSecret())
 	var quotationResponse QuotationResponse
@@ -73,8 +66,7 @@ func createQuotation() QuotationResponse {
 	return quotationResponse
 }
 
-func createTransaction(quotationId string, msisdn string) TransactionResponse {
-	transactionRequest := GetCreateTransactionRequestBody(msisdn)
+func createTransaction(quotationId string, transactionRequest []byte) TransactionResponse {
 	var transactionResponseByte = HttpPost("https://api-mt.pre.thunes.com/v2/money-transfer/quotations/"+
 		quotationId+"/transactions",
 		transactionRequest, GetApiKey(), GetApiSecret())
@@ -116,7 +108,9 @@ func HandlerCallback(transactionResponseByte []byte) {
 func SendTransactionStatusUpdateEmail(transactionResponse TransactionResponse) {
 	subject := "Transaction update :" + IntToString(transactionResponse.Id)
 	content := "Status for transaction id:" + IntToString(transactionResponse.Id) +
-		" is updated to " + transactionResponse.StatusMessage + "."
+		" is updated to " + transactionResponse.StatusMessage + ".\n transaction detail: " +
+		FloatToString(transactionResponse.Destination.Amount) + transactionResponse.Destination.Currency +
+		" Creation data: " + transactionResponse.CreationDate + ".\n"
 	switch transactionResponse.Status {
 	case STATUS_COMPLETED:
 		content += "\ntransaction is successful."
@@ -131,37 +125,4 @@ func SendTransactionStatusUpdateEmail(transactionResponse TransactionResponse) {
 	}
 	recipient := transactionResponse.Sender.Email
 	sendEmail(subject, content, recipient)
-}
-
-func TestSuccessFlow() {
-	getPayers()
-	quotationResponse := createQuotation()
-	transactionResponse := createTransaction(IntToString(quotationResponse.Id), CREDIT_PARTY_MSISDN_100)
-	confirmTransaction(IntToString(transactionResponse.Id))
-	time.Sleep(time.Second * 3)
-	getTransaction(IntToString(transactionResponse.Id))
-}
-
-func TestPayerUnavailableFlow() {
-	quotationResponse := createQuotation()
-	transactionResponse := createTransaction(IntToString(quotationResponse.Id), CREDIT_PARTY_MSISDN_117)
-	confirmTransaction(IntToString(transactionResponse.Id))
-	time.Sleep(time.Second * 3)
-	getTransaction(IntToString(transactionResponse.Id))
-}
-
-func TestBarredBeneficiaryFlow() {
-	quotationResponse := createQuotation()
-	transactionResponse := createTransaction(IntToString(quotationResponse.Id), CREDIT_PARTY_MSISDN_104)
-	confirmTransaction(IntToString(transactionResponse.Id))
-	time.Sleep(time.Second * 3)
-	getTransaction(IntToString(transactionResponse.Id))
-}
-
-func TestLimitationOnTransactionFlow() {
-	quotationResponse := createQuotation()
-	transactionResponse := createTransaction(IntToString(quotationResponse.Id), CREDIT_PARTY_MSISDN_111)
-	confirmTransaction(IntToString(transactionResponse.Id))
-	time.Sleep(time.Second * 3)
-	getTransaction(IntToString(transactionResponse.Id))
 }

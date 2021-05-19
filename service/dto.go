@@ -1,10 +1,5 @@
 package service
 
-import (
-	"encoding/json"
-	"fmt"
-)
-
 type QuotationRequest struct {
 	ExternalId      string      `json:"external_id"`
 	PayerId         string      `json:"payer_id"`
@@ -143,33 +138,4 @@ type TransactionType struct {
 type C2c struct {
 	MaximumTransactionAmount int `json:"maximum_transaction_amount"`
 	MinimumTransactionAmount int `json:"minimum_transaction_amount"`
-}
-
-func GetQuotationRequestBody() []byte {
-	source := Source{10, "SGD", "SGP"}
-	destination := Destination{1, "PHP"}
-	quotation := QuotationRequest{GetExternalId(), "83", "SOURCE_AMOUNT", "C2C", source, destination}
-	quotationJson, err := json.Marshal(quotation)
-	if err != nil {
-		fmt.Println("GetQuotationRequestBody err:", err)
-	}
-	return quotationJson
-}
-
-func GetCreateTransactionRequestBody(creditPartyMsisdn string) []byte {
-	creditPartyIdentifier := CreditPartyIdentifier{creditPartyMsisdn, "0123456789", "ABCDEFGH"}
-	sender := Sender{"Doe", "John", "SGP", "1970-01-01",
-		"SGP", "MALE", "42 Rue des fleurs", "75000", "Paris",
-		"FRA", "33712345678", "327113606@qq.com", "SOCIAL_SECURITY",
-		"502-42-0158", "2016-01-01", "Residential Advisor"}
-	beneficiary := Beneficiary{"Doe", "John", "SGP", "1970-01-01",
-		"SGP", "MALE", "42 Rue des fleurs", "75000", "Paris",
-		"FRA", "33712345678", "327113606@qq.com", "SOCIAL_SECURITY",
-		"FRA", "502-42-0158", "Residential Advisor"}
-	transactionRequest := TransactionRequest{creditPartyIdentifier, sender, beneficiary, GetExternalId()}
-	transactionRequestJson, err := json.Marshal(transactionRequest)
-	if err != nil {
-		fmt.Println("GetCreateTransactionRequestBody err:", err)
-	}
-	return transactionRequestJson
 }

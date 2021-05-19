@@ -58,6 +58,14 @@ type TransactionResponse struct {
 	DocumentReferenceNumber   string                `json:"document_reference_number"`
 }
 
+type AttachmentResponse struct {
+	Id            int    `json:"id"`
+	Name          string `json:"name"`
+	ContentType   string `json:"content_type"`
+	TransactionId int    `json:"transaction_id"`
+	Type          string `json:"type"`
+}
+
 type Source struct {
 	Amount         float32 `json:"amount"`
 	Currency       string  `json:"currency"`

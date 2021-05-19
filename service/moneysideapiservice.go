@@ -38,7 +38,7 @@ func getTransaction(transactionId string) TransactionResponse {
 	return transactionResponse
 }
 
-func GetPayerLimitation(payerId string) C2c {
+func getPayerLimitation(payerId string) C2c {
 	var payerResponseByte = HttpGet("https://api-mt.pre.thunes.com/v2/money-transfer/payers/"+payerId,
 		GetApiKey(), GetApiSecret())
 	var payer Payer
@@ -96,6 +96,19 @@ func confirmTransaction(transactionId string) TransactionResponse {
 	return transactionResponse
 }
 
+func AttachmentToTransaction(transactionId string, fileType string, fileName string, filePath string) AttachmentResponse {
+	var attachmentResponseByte = attachmentUploadRequest("https://api-mt.pre.thunes.com/v2/money-transfer/transactions/"+
+		transactionId+"/attachments", fileType, fileName, filePath, GetApiKey(), GetApiSecret())
+	var attachmentResponse AttachmentResponse
+	err := json.Unmarshal(attachmentResponseByte, &attachmentResponse)
+	if err != nil {
+		fmt.Println("ConfirmTransaction err:", err)
+	}
+	fmt.Printf(">>>>>>>>>>Attachment %s is attached to transaction:  %s \n",
+		fileName, transactionId)
+	return attachmentResponse
+}
+
 func HandlerCallback(transactionResponseByte []byte) {
 	var transactionResponse TransactionResponse
 	err := json.Unmarshal(transactionResponseByte, &transactionResponse)
@@ -119,7 +132,7 @@ func SendTransactionStatusUpdateEmail(transactionResponse TransactionResponse) {
 	case STATUS_DECLINED_BARRED_BENEFICIARY:
 		content += "\nbeneficiary is barred, we are sorry for the inconvenience caused."
 	case STATUS_LIMITATIONS_ON_TRANSACTION_VALUE:
-		c2c := GetPayerLimitation("37")
+		c2c := getPayerLimitation("37")
 		content += "\ntransaction amount exceeds the limitation, payer's transaction maximum is: " +
 			IntToString(c2c.MaximumTransactionAmount) + " and minimum is: " + IntToString(c2c.MinimumTransactionAmount)
 	}

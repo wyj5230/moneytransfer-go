@@ -17,6 +17,11 @@ func TestHappyFlow(t *testing.T) {
 	getPayers()
 	quotationResponse := createQuotation(getQuotationRequestTestData())
 	transactionResponse := createTransaction(IntToString(quotationResponse.Id), getCreateTransactionRequestTestData(CREDIT_PARTY_MSISDN_100))
+	attachmentResponse := attachDocumentToTransaction(IntToString(transactionResponse.Id))
+	if attachmentResponse.TransactionId == transactionResponse.Id {
+		fmt.Println("Happy flow attachment uploaded successfully")
+		fmt.Println()
+	}
 	confirmTransaction(IntToString(transactionResponse.Id))
 	time.Sleep(time.Second * 3)
 	result := getTransaction(IntToString(transactionResponse.Id))
@@ -96,4 +101,9 @@ func getCreateTransactionRequestTestData(creditPartyMsisdn string) []byte {
 		fmt.Println("GetCreateTransactionRequestBody err:", err)
 	}
 	return transactionRequestJson
+}
+
+func attachDocumentToTransaction(transactionId string) AttachmentResponse {
+	return AttachmentToTransaction(transactionId, "invoice", "Thunes.pdf",
+		"C:\\Users\\Administrator\\Desktop\\Thunes Demo\\Thunes.pdf")
 }

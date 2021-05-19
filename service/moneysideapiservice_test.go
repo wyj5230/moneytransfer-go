@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"testing"
@@ -15,7 +14,7 @@ const CREDIT_PARTY_MSISDN_111 string = "263775892111"
 
 func TestHappyFlow(t *testing.T) {
 	getPayers()
-	quotationResponse := createQuotation(getQuotationRequestTestData())
+	quotationResponse := CreateQuotation(getQuotationRequestTestData())
 	transactionResponse := createTransaction(IntToString(quotationResponse.Id), getCreateTransactionRequestTestData(CREDIT_PARTY_MSISDN_100))
 	attachmentResponse := attachDocumentToTransaction(IntToString(transactionResponse.Id))
 	if attachmentResponse.TransactionId == transactionResponse.Id {
@@ -25,40 +24,40 @@ func TestHappyFlow(t *testing.T) {
 	confirmTransaction(IntToString(transactionResponse.Id))
 	time.Sleep(time.Second * 3)
 	result := getTransaction(IntToString(transactionResponse.Id))
-	if result.Status == STATUS_COMPLETED {
+	if result.Status == StatusCompleted {
 		fmt.Println("Happy flow result is ok")
 	}
 }
 
 func TestPayerUnavailableFlow(t *testing.T) {
-	quotationResponse := createQuotation(getQuotationRequestTestData())
+	quotationResponse := CreateQuotation(getQuotationRequestTestData())
 	transactionResponse := createTransaction(IntToString(quotationResponse.Id), getCreateTransactionRequestTestData(CREDIT_PARTY_MSISDN_117))
 	confirmTransaction(IntToString(transactionResponse.Id))
 	time.Sleep(time.Second * 3)
 	result := getTransaction(IntToString(transactionResponse.Id))
-	if result.Status == STATUS_DECLINED_PAYER_CURRENTLY_UNAVAILABLE {
+	if result.Status == StatusDeclinedPayerCurrentlyUnavailable {
 		fmt.Println("Payer Unavailable flow result is ok")
 	}
 }
 
 func TestBarredBeneficiaryFlow(t *testing.T) {
-	quotationResponse := createQuotation(getQuotationRequestTestData())
+	quotationResponse := CreateQuotation(getQuotationRequestTestData())
 	transactionResponse := createTransaction(IntToString(quotationResponse.Id), getCreateTransactionRequestTestData(CREDIT_PARTY_MSISDN_104))
 	confirmTransaction(IntToString(transactionResponse.Id))
 	time.Sleep(time.Second * 3)
 	result := getTransaction(IntToString(transactionResponse.Id))
-	if result.Status == STATUS_DECLINED_BARRED_BENEFICIARY {
+	if result.Status == StatusDeclinedBarredBeneficiary {
 		fmt.Println("Barred Beneficiary flow result is ok")
 	}
 }
 
 func TestLimitationOnTransactionFlow(t *testing.T) {
-	quotationResponse := createQuotation(getQuotationRequestTestData())
+	quotationResponse := CreateQuotation(getQuotationRequestTestData())
 	transactionResponse := createTransaction(IntToString(quotationResponse.Id), getCreateTransactionRequestTestData(CREDIT_PARTY_MSISDN_111))
 	confirmTransaction(IntToString(transactionResponse.Id))
 	time.Sleep(time.Second * 3)
 	result := getTransaction(IntToString(transactionResponse.Id))
-	if result.Status == STATUS_LIMITATIONS_ON_TRANSACTION_VALUE {
+	if result.Status == StatusLimitationsOnTransactionValue {
 		fmt.Println("Limitation On Transaction flow result is ok")
 	}
 }
@@ -74,18 +73,14 @@ func TestAll(t *testing.T) {
 	TestLimitationOnTransactionFlow(t)
 }
 
-func getQuotationRequestTestData() []byte {
+func getQuotationRequestTestData() QuotationRequest {
 	source := Source{10, "SGD", "SGP"}
 	destination := Destination{1, "PHP"}
 	quotation := QuotationRequest{GetExternalId(), "83", "SOURCE_AMOUNT", "C2C", source, destination}
-	quotationJson, err := json.Marshal(quotation)
-	if err != nil {
-		fmt.Println("GetQuotationRequestBody err:", err)
-	}
-	return quotationJson
+	return quotation
 }
 
-func getCreateTransactionRequestTestData(creditPartyMsisdn string) []byte {
+func getCreateTransactionRequestTestData(creditPartyMsisdn string) TransactionRequest {
 	creditPartyIdentifier := CreditPartyIdentifier{creditPartyMsisdn, "0123456789", "ABCDEFGH"}
 	sender := Sender{"Doe", "John", "SGP", "1970-01-01",
 		"SGP", "MALE", "42 Rue des fleurs", "75000", "Paris",
@@ -95,12 +90,9 @@ func getCreateTransactionRequestTestData(creditPartyMsisdn string) []byte {
 		"SGP", "MALE", "42 Rue des fleurs", "75000", "Paris",
 		"FRA", "33712345678", "327113606@qq.com", "SOCIAL_SECURITY",
 		"FRA", "502-42-0158", "Residential Advisor"}
-	transactionRequest := TransactionRequest{creditPartyIdentifier, sender, beneficiary, GetExternalId()}
-	transactionRequestJson, err := json.Marshal(transactionRequest)
-	if err != nil {
-		fmt.Println("GetCreateTransactionRequestBody err:", err)
-	}
-	return transactionRequestJson
+	transactionRequest := TransactionRequest{creditPartyIdentifier, sender,
+		beneficiary, GetExternalId(), "http://4cfa0abac95c.ngrok.io/money-side/callback"}
+	return transactionRequest
 }
 
 func attachDocumentToTransaction(transactionId string) AttachmentResponse {

@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	service.ServeCallback()
+	service.Init()
 }

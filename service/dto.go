@@ -28,6 +28,7 @@ type TransactionRequest struct {
 	Sender                Sender                `json:"sender"`
 	Beneficiary           Beneficiary           `json:"beneficiary"`
 	ExternalId            string                `json:"external_id"`
+	CallbackUrl           string                `json:"callback_url"`
 }
 
 type TransactionResponse struct {
@@ -56,6 +57,7 @@ type TransactionResponse struct {
 	Fee                       Fee                   `json:"fee"`
 	PurposeOfRemittance       string                `json:"purpose_of_remittance"`
 	DocumentReferenceNumber   string                `json:"document_reference_number"`
+	CallbackUrl               string                `json:"callback_url"`
 }
 
 type AttachmentResponse struct {

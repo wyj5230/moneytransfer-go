@@ -5,10 +5,10 @@ import (
 	"fmt"
 )
 
-const STATUS_COMPLETED string = "70000"
-const STATUS_DECLINED_PAYER_CURRENTLY_UNAVAILABLE string = "90400"
-const STATUS_DECLINED_BARRED_BENEFICIARY string = "90201"
-const STATUS_LIMITATIONS_ON_TRANSACTION_VALUE string = "90305"
+const StatusCompleted string = "70000"
+const StatusDeclinedPayerCurrentlyUnavailable string = "90400"
+const StatusDeclinedBarredBeneficiary string = "90201"
+const StatusLimitationsOnTransactionValue string = "90305"
 
 func getPayers() []Payer {
 	var payersResponse = HttpGet("https://api-mt.pre.thunes.com/v2/money-transfer/payers",
@@ -16,7 +16,7 @@ func getPayers() []Payer {
 	var payers []Payer
 	err := json.Unmarshal(payersResponse, &payers)
 	if err != nil {
-		fmt.Println("GetTransaction err:", err)
+		//fmt.Println("GetPayers err:", err)
 	}
 	for i := 0; i < len(payers); i++ {
 		fmt.Println("payer： " + payers[i].Name + ", currency:" + payers[i].Currency + ", id:" + FloatToString(payers[i].Id))
@@ -49,9 +49,14 @@ func getPayerLimitation(payerId string) C2c {
 	return payer.TransactionType.C2c
 }
 
-func createQuotation(quotationRequest []byte) QuotationResponse {
+func CreateQuotation(quotationRequest QuotationRequest) QuotationResponse {
+	quotationRequest.ExternalId = GetExternalId()
+	quotationRequestByte, quotationRequestErr := json.Marshal(quotationRequest)
+	if quotationRequestErr != nil {
+		fmt.Println("quotationRequest body err:", quotationRequestErr)
+	}
 	var quotationResponseByte = HttpPost("https://api-mt.pre.thunes.com/v2/money-transfer/quotations",
-		quotationRequest, GetApiKey(), GetApiSecret())
+		quotationRequestByte, GetApiKey(), GetApiSecret())
 	var quotationResponse QuotationResponse
 	err := json.Unmarshal(quotationResponseByte, &quotationResponse)
 	if err != nil {
@@ -66,10 +71,15 @@ func createQuotation(quotationRequest []byte) QuotationResponse {
 	return quotationResponse
 }
 
-func createTransaction(quotationId string, transactionRequest []byte) TransactionResponse {
+func createTransaction(quotationId string, transactionRequest TransactionRequest) TransactionResponse {
+	transactionRequest.ExternalId = GetExternalId()
+	transactionRequestByte, transactionRequestErr := json.Marshal(transactionRequest)
+	if transactionRequestErr != nil {
+		fmt.Println("quotationRequest body err:", transactionRequestErr)
+	}
 	var transactionResponseByte = HttpPost("https://api-mt.pre.thunes.com/v2/money-transfer/quotations/"+
 		quotationId+"/transactions",
-		transactionRequest, GetApiKey(), GetApiSecret())
+		transactionRequestByte, GetApiKey(), GetApiSecret())
 	var transactionResponse TransactionResponse
 	err := json.Unmarshal(transactionResponseByte, &transactionResponse)
 	if err != nil {
@@ -125,13 +135,13 @@ func SendTransactionStatusUpdateEmail(transactionResponse TransactionResponse) {
 		FloatToString(transactionResponse.Destination.Amount) + transactionResponse.Destination.Currency +
 		". Creation date: " + transactionResponse.CreationDate + ".\n"
 	switch transactionResponse.Status {
-	case STATUS_COMPLETED:
+	case StatusCompleted:
 		content += "\ntransaction is successful."
-	case STATUS_DECLINED_PAYER_CURRENTLY_UNAVAILABLE:
+	case StatusDeclinedPayerCurrentlyUnavailable:
 		content += "\npayer is currently unavailable, please try again later."
-	case STATUS_DECLINED_BARRED_BENEFICIARY:
+	case StatusDeclinedBarredBeneficiary:
 		content += "\nbeneficiary is barred, we are sorry for the inconvenience caused."
-	case STATUS_LIMITATIONS_ON_TRANSACTION_VALUE:
+	case StatusLimitationsOnTransactionValue:
 		c2c := getPayerLimitation("37")
 		content += "\ntransaction amount exceeds the limitation, payer's transaction maximum is: " +
 			IntToString(c2c.MaximumTransactionAmount) + " and minimum is: " + IntToString(c2c.MinimumTransactionAmount)

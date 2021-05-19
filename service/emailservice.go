@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"gopkg.in/gomail.v2"
+	"github.com/gopkg.in/gomail.v2"
 	"log"
 	"os"
 )
@@ -34,7 +34,7 @@ func sendEmail(subject string, content string, recipient string) {
 	m.SetBody(`text/html`, mailConf.Body)
 	err := gomail.NewDialer(mailConf.SMTPAddr, mailConf.SMTPPort, mailConf.Sender, mailConf.SPassword).DialAndSend(m)
 	if err != nil {
-		log.Fatalf("Send Email Failed, %s", err.Error())
+		log.Printf("Send Email Failed, %s", err.Error())
 		return
 	}
 	fmt.Printf("Send Email Successfully to: %s\n\n", recipient)

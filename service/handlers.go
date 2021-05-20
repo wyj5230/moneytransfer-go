@@ -16,6 +16,7 @@ func Init() {
 	router.HandleFunc("/money-side/transaction/{quotationId}", createTransactionHandler).Methods("POST")
 	router.HandleFunc("/money-side/transaction/{id}/confirm", confirmTransactionHandler).Methods("POST")
 	router.HandleFunc("/money-side/transaction/{id}", getTransactionHandler).Methods("GET")
+	router.HandleFunc("/money-side/payers", getPayersHandler).Methods("GET")
 	router.HandleFunc("/money-side/callback", callbackHandler).Methods("POST")
 	log.Fatal(http.ListenAndServe(":8080", router))
 
@@ -69,6 +70,14 @@ func getTransactionHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
 	encodeErr := json.NewEncoder(w).Encode(getTransaction(params["id"]))
+	if encodeErr != nil {
+		log.Printf("GetTransaction encode err: %s", encodeErr)
+	}
+}
+
+func getPayersHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	encodeErr := json.NewEncoder(w).Encode(getPayers())
 	if encodeErr != nil {
 		log.Printf("GetTransaction encode err: %s", encodeErr)
 	}

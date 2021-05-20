@@ -50,6 +50,7 @@ func getPayerLimitation(payerId string) C2c {
 }
 
 func CreateQuotation(quotationRequest QuotationRequest) QuotationResponse {
+	//
 	quotationRequest.ExternalId = GetExternalId()
 	quotationRequestByte, quotationRequestErr := json.Marshal(quotationRequest)
 	if quotationRequestErr != nil {
